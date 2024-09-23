@@ -6,4 +6,4 @@
 
 int do_regex(char *, regex_t *, char *, char *, int *);
 
-#endif
+#endif //RE_H

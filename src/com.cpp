@@ -3,7 +3,10 @@
 
 int init() {
   HRESULT result = CoInitialize(0);
-  if (result != S_OK) return 1;
+  if (result != S_OK) {
+    return 1;
+  }
+  
   return 0;
 }
 
@@ -13,6 +16,8 @@ int doit(char *filename, regex_t *re, char *replace, int options) {
   char prog[MAX_PATH];
   char dir[MAX_PATH];
   char args[MAX_PATH];
+  char icon[MAX_PATH];
+  int iconId;
 
   wchar_t widepath[MAX_PATH];
   WIN32_FIND_DATA found;
@@ -20,7 +25,9 @@ int doit(char *filename, regex_t *re, char *replace, int options) {
 
   /* Create a link */
   result = CoCreateInstance(CLSID_ShellLink, 0, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **) &link);
-  if (result != S_OK) return 1;
+  if (result != S_OK) {
+    return 1;
+  }
 
   /* Get pointer to link's PersistFile interface */
   result = link->QueryInterface(IID_IPersistFile, (void **) &file);
@@ -63,6 +70,14 @@ int doit(char *filename, regex_t *re, char *replace, int options) {
     link->Release();
     return 6;
   }
+
+  result = link->GetIconLocation(icon, MAX_PATH, &iconId );
+  if (result != S_OK) {
+    file->Release();
+    link->Release();
+    return 7;
+  }
+
 
   int need_show = 0;
   int need_write = 0;
@@ -119,18 +134,38 @@ int doit(char *filename, regex_t *re, char *replace, int options) {
         dir[strlen(replaced)] = '\0';
       }
     }
-  }
-  else need_show = 1;
+
+    /* Match Icon */
+    if (options & OPTION_ICON) {
+      do_regex(icon, re, replace, replaced, &need_show);
+      if (replaced[0]) {
+        result = link->SetIconLocation(replaced, iconId);
+        if (result != S_OK) {
+          fprintf(stderr, "Error setting new path!\n");
+          file->Release();
+          link->Release();
+          return 7;
+        }
+        need_write = 1;
+        memmove(icon, replaced, strlen(replaced));
+        icon[strlen(replaced)] = '\0';
+      }
+    }
+  } else {
+    need_show = 1;
+  } 
 
   /* Display */
   printf(" Shortcut: %s", filename);
   if (need_show) {
     printf("\n");
-    printf("   Target: %s\n", prog);
-    printf("Arguments: %s\n", args);
-    printf(" Start in: %s\n", dir);
-  }
-  else printf(" (no match)\n");
+    printf("        Target : '%s'\n", prog);
+    printf("     Arguments : '%s'\n", args);
+    printf("      Start in : '%s'\n", dir);
+    printf(" Icon Location : '%s' (%d)\n", icon, iconId);
+  } else {
+    printf(" (no match)\n");
+  }   
 
   /* Update the link */
   if (need_write) {

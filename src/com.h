@@ -10,4 +10,4 @@ int init();
 int doit(char *, regex_t *, char *, int);
 void cleanup();
 
-#endif
+#endif //COM_H

@@ -3,8 +3,12 @@
 static void usage(char *progname) {
   fprintf(stderr, "Usage: %s [-options] filename.lnk [regex [regex]]\n", progname);
   fprintf(stderr, "Notes: With two regexes, link will be retargeted.\n");
-  fprintf(stderr, "Use options to specify retargetting in [t]arget, [a]rguments or working\n[d]irectory fields.\n");
-  fprintf(stderr, "For example:\n\n  %s -td filename.lnk 'C:\\Program Files' '%%programfiles%%\n\n", progname);
+  fprintf(stderr, "Use options to specify retargetting in :\n");
+  fprintf(stderr, "\t t - target field;\n" );
+  fprintf(stderr, "\t a - argument fields;\n" );
+  fprintf(stderr, "\t d - working directory field;\n" );
+  fprintf(stderr, "\t i - icon field.\n\n" );
+  fprintf(stderr, "For example:\n  %s -td filename.lnk 'C:\\Program Files' '%%programfiles%%\n\n", progname);
   fprintf(stderr, "The above example would replace C:\\Program Files with the raw environment\n");
   fprintf(stderr, "variable %%programfiles%% only in the link target and working directory fields.\n");
 }
@@ -38,6 +42,10 @@ int main(int argc, char **argv) {
         case 'D':
           options |= OPTION_DIR;
           break;
+        case 'i':
+        case 'I':
+          options |= OPTION_ICON;
+          break;
         default:
           fprintf(stderr, "bogus option character '%c'\n", *s);
           usage(argv[0]);
@@ -51,7 +59,7 @@ int main(int argc, char **argv) {
 
   /* Compile re */
   if (argc > 2) {
-    ret = regcomp(&regex, argv[2], REG_EXTENDED | REG_ICASE);
+    //ret = regcomp(&regex, argv[2], REG_EXTENDED | REG_ICASE);
     if (ret) {
       fprintf(stderr, "Failed to parse regular expression: error code %d\n", ret);
       exit(2);
@@ -69,7 +77,7 @@ int main(int argc, char **argv) {
   IPersistFile *file;
 
   ret = doit(argv[1], re, replace, options);
-  if (re) regfree(re);
+  //if (re) {regfree(re);} 
   if (ret) {
     fprintf(stderr, "doit() returned %d\n", ret);
     cleanup();

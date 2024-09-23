@@ -6,8 +6,9 @@ int do_regex(char *path, regex_t *re, char *replace, char *replaced, int *need_s
   regmatch_t *matches = new regmatch_t[num_matches];
 
   replaced[0] = '\0';
-  ret = regexec(re, path, num_matches, matches, 0);
-
+  //ret = regexec(re, path, num_matches, matches, 0);
+  ret = 0;
+  
   /* Not found? */
   if (ret == REG_NOMATCH) {
     delete[] matches;
